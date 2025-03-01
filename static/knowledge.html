@@ -1,0 +1,276 @@
+<!-- static/knowledge.html -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="icon" href="/static/images/robot-icon.svg" type="image/svg+xml">
+    <style>
+        .knowledge-container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .knowledge-form {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            background-color: #4a6cf7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #3a5ce5;
+        }
+        
+        .knowledge-list {
+            margin-top: 20px;
+        }
+        
+        .category-section {
+            margin-bottom: 20px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .knowledge-item {
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        
+        .success-message {
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="knowledge-container">
+        <h1>知识库管理</h1>
+        <p>在这里添加和管理聊天机器人的知识库</p>
+        
+        <div id="successMessage" class="success-message"></div>
+        
+        <div class="knowledge-form">
+            <h2>添加新知识</h2>
+            <form id="knowledgeForm">
+                <div class="form-group">
+                    <label for="category">分类</label>
+                    <select id="category" name="category">
+                        <option value="">通用知识</option>
+                        <option value="编程">编程</option>
+                        <option value="旅游">旅游</option>
+                        <option value="custom">自定义...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="customCategoryGroup" style="display: none;">
+                    <label for="customCategory">自定义分类</label>
+                    <input type="text" id="customCategory" name="customCategory" placeholder="输入自定义分类名称">
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">知识内容</label>
+                    <textarea id="content" name="content" placeholder="输入知识内容" required></textarea>
+                </div>
+                
+                <button type="submit" class="btn">添加知识</button>
+            </form>
+        </div>
+        
+        <div class="knowledge-list">
+            <h2>现有知识</h2>
+            <div id="knowledgeItems"></div>
+        </div>
+        
+        <p><a href="/">返回聊天页面</a></p>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const knowledgeForm = document.getElementById('knowledgeForm');
+            const categorySelect = document.getElementById('category');
+            const customCategoryGroup = document.getElementById('customCategoryGroup');
+            const customCategoryInput = document.getElementById('customCategory');
+            const knowledgeItemsContainer = document.getElementById('knowledgeItems');
+            const successMessage = document.getElementById('successMessage');
+            
+            // 监听分类选择变化
+            categorySelect.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customCategoryGroup.style.display = 'block';
+                    customCategoryInput.required = true;
+                } else {
+                    customCategoryGroup.style.display = 'none';
+                    customCategoryInput.required = false;
+                }
+            });
+            
+            // 提交表单
+            knowledgeForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                let category = categorySelect.value;
+                if (category === 'custom') {
+                    category = customCategoryInput.value.trim();
+                    if (!category) {
+                        alert('请输入自定义分类名称');
+                        return;
+                    }
+                }
+                
+                const content = document.getElementById('content').value.trim();
+                if (!content) {
+                    alert('请输入知识内容');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/api/knowledge', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                            category: category || null
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        // 显示成功消息
+                        successMessage.textContent = '知识添加成功！';
+                        successMessage.style.display = 'block';
+                        
+                        // 重置表单
+                        knowledgeForm.reset();
+                        customCategoryGroup.style.display = 'none';
+                        
+                        // 重新加载知识列表
+                        loadKnowledge();
+                        
+                        // 3秒后隐藏成功消息
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                        }, 3000);
+                    } else {
+                        alert('添加知识失败: ' + (data.message || '未知错误'));
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('添加知识失败，请查看控制台了解详情');
+                }
+            });
+            
+            // 加载知识列表
+            async function loadKnowledge() {
+                try {
+                    const response = await fetch('/api/knowledge');
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        displayKnowledge(data.data);
+                    } else {
+                        console.error('Failed to load knowledge:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error loading knowledge:', error);
+                }
+            }
+            
+            // 显示知识列表
+            function displayKnowledge(knowledgeItems) {
+                // 清空容器
+                knowledgeItemsContainer.innerHTML = '';
+                
+                // 按分类组织知识
+                const categorizedKnowledge = {};
+                
+                // 处理通用知识
+                if (knowledgeItems.length > 0) {
+                    categorizedKnowledge['通用知识'] = knowledgeItems;
+                }
+                
+                // 创建分类部分
+                for (const category in categorizedKnowledge) {
+                    const categorySection = document.createElement('div');
+                    categorySection.className = 'category-section';
+                    
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.className = 'category-title';
+                    categoryTitle.textContent = category;
+                    categorySection.appendChild(categoryTitle);
+                    
+                    // 添加该分类下的所有知识
+                    categorizedKnowledge[category].forEach(item => {
+                        const knowledgeItem = document.createElement('div');
+                        knowledgeItem.className = 'knowledge-item';
+                        knowledgeItem.textContent = item;
+                        categorySection.appendChild(knowledgeItem);
+                    });
+                    
+                    knowledgeItemsContainer.appendChild(categorySection);
+                }
+                
+                // 如果没有知识，显示提示
+                if (knowledgeItemsContainer.children.length === 0) {
+                    knowledgeItemsContainer.innerHTML = '<p>暂无知识，请添加新知识</p>';
+                }
+            }
+            
+            // 初始加载知识
+            loadKnowledge();
+        });
+    </script>
+</body>
+</html>

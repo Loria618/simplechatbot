@@ -1,0 +1,25 @@
+{
+    "model": {
+        "name": "llama3.2:1b",
+        "use_ollama": true,
+        "use_llama_cpp": false,
+        "ollama_base_url": "http://localhost:11434",
+        "local_model_path": "/Users/loria/.ollama/models/blobs/sha256-74701a8c35f6c8d9a4b91f3f3497643001d63e0c7a84e085bed452548fa88d45",
+        "device": "auto",
+        "dtype": "bfloat16",
+        "context_size": 4096,
+        "n_gpu_layers": -1,
+        "n_threads": 4
+    },
+    "ui": {
+        "title": "简单本地聊天机器人 (Ollama)",
+        "width": 800,
+        "height": 600,
+        "theme": "light"
+    },
+    "chat": {
+        "max_history": 10,
+        "system_prompt": "You are a helpful AI assistant. Always respond in the same language that the user uses. If the user asks in English, respond in English. If the user asks in Chinese, respond in Chinese. Keep your answers concise, helpful, and logical. Do not mix languages in your responses.",
+        "max_new_tokens": 256
+    }
+}

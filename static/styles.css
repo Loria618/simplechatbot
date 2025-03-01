@@ -1,0 +1,187 @@
+/* static/styles.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.content {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 聊天图标样式 */
+.chat-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background-color: #4a6cf7;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.chat-icon:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* 聊天容器样式 */
+.chat-container {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 999;
+}
+
+.chat-header {
+    padding: 15px;
+    background-color: #4a6cf7;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-message, .bot-message, .system-message {
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    align-self: flex-end;
+    background-color: #e3f2fd;
+}
+
+.bot-message {
+    align-self: flex-start;
+    background-color: #f1f1f1;
+}
+
+.system-message {
+    align-self: center;
+    background-color: #fff3cd;
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* 预设问题样式 */
+.preset-questions {
+    padding: 10px 15px;
+    border-top: 1px solid #eee;
+    background-color: #f9f9f9;
+}
+
+.preset-questions h4 {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+}
+
+.question-btn {
+    display: inline-block;
+    margin: 3px;
+    padding: 6px 12px;
+    background-color: #e7eaf6;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.question-btn:hover {
+    background-color: #d0d6f9;
+}
+
+.chat-footer {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #eee;
+}
+
+.chat-footer textarea {
+    flex: 1;
+    height: 40px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    resize: none;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.chat-footer button {
+    width: 40px;
+    height: 40px;
+    margin-left: 8px;
+    border: none;
+    border-radius: 50%;
+    background-color: #4a6cf7;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.chat-footer button:hover {
+    background-color: #3a5ce5;
+}
+
+#clearChat {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+#clearChat:hover {
+    background-color: #e0e0e0;
+}

@@ -1,0 +1,10 @@
+transformers>=4.43.0
+torch>=2.0.0
+accelerate>=0.20.0
+sentencepiece
+requests
+llama-cpp-python
+fastapi
+uvicorn
+websockets
+aiofiles
