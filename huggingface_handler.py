@@ -86,11 +86,26 @@ class HuggingFaceHandler:
             "Content-Type": "application/json"
         }
         
-        # Construct request body
+        # Format the conversation for the model
+        # Convert messages to a formatted string for text-generation models
+        formatted_prompt = ""
+        for msg in messages:
+            role = msg["role"]
+            content = msg["content"]
+            if role == "system":
+                formatted_prompt += f"<s>[INST] {content} [/INST]\n"
+            elif role == "user":
+                formatted_prompt += f"<s>[INST] {content} [/INST]\n"
+            elif role == "assistant":
+                formatted_prompt += f"{content}</s>\n"
+        
+        # For the last user message, don't close the tag if it's the last message
+        if messages[-1]["role"] == "user":
+            formatted_prompt = formatted_prompt.rstrip("\n")
+        
+        # Construct request body for text-generation API
         payload = {
-            "inputs": {
-                "messages": messages
-            },
+            "inputs": formatted_prompt,
             "parameters": {
                 "max_new_tokens": self.max_new_tokens,
                 "temperature": self.temperature,
