@@ -1,10 +1,10 @@
 <!-- static/index.html -->
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网页内置聊天机器人</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Web Embedded Chatbot</title>
     <link rel="stylesheet" href="/static/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="icon" href="/static/images/robot-icon.svg" type="image/svg+xml">
@@ -12,35 +12,35 @@
 </head>
 <body>
     <div class="content">
-        <h1>网页内容示例</h1>
-        <p>这里是网页的主要内容。右下角有一个聊天机器人图标，点击它可以打开聊天窗口。</p>
+        <h1>Web Content Example</h1>
+        <p>This is the main content of the webpage. There is a chatbot icon in the bottom right corner, click it to open the chat window.</p>
     </div>
 
-    <!-- 聊天机器人悬浮图标 -->
+    <!-- Chatbot floating icon -->
     <div class="chat-icon" id="chatIcon">
         <i class="fas fa-robot"></i>
     </div>
 
-    <!-- 聊天窗口 -->
+    <!-- Chat window -->
     <div class="chat-container" id="chatContainer">
         <div class="chat-header">
-            <h3>聊天机器人</h3>
+            <h3>Chatbot</h3>
             <button id="closeChat"><i class="fas fa-times"></i></button>
         </div>
         <div class="chat-body" id="chatBody">
-            <div class="system-message">正在连接聊天机器人...</div>
+            <div class="system-message">Connecting to chatbot...</div>
         </div>
         
-        <!-- 预设问题区域 -->
+        <!-- Preset questions area -->
         <div class="preset-questions" id="presetQuestions">
-            <h4>常见问题</h4>
-            <div class="question-btn" data-question="你好，请介绍一下你自己">你好，请介绍一下你自己</div>
-            <div class="question-btn" data-question="你能做什么?">你能做什么?</div>
-            <div class="question-btn" data-question="帮我写一个简单的Python函数">帮我写一个简单的Python函数</div>
+            <h4>Common Questions</h4>
+            <div class="question-btn" data-question="Hello, please introduce yourself">Hello, please introduce yourself</div>
+            <div class="question-btn" data-question="What can you do?">What can you do?</div>
+            <div class="question-btn" data-question="Help me write a simple Python function">Help me code</div>
         </div>
         
         <div class="chat-footer">
-            <textarea id="userInput" placeholder="请输入消息..."></textarea>
+            <textarea id="userInput" placeholder="Enter a message..."></textarea>
             <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
             <button id="clearChat"><i class="fas fa-trash"></i></button>
         </div>

@@ -5,39 +5,39 @@ import threading
 from chat_logic import ChatSession
 
 class ChatbotUI:
-    """聊天机器人的用户界面"""
+    """User interface for the chatbot"""
     
     def __init__(self, config_path="config.json"):
-        """初始化用户界面
+        """Initialize the user interface
         
         Args:
-            config_path: 配置文件路径
+            config_path: Path to the configuration file
         """
-        # 加载配置
+        # Load configuration
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = json.load(f)
         
-        # 创建聊天会话
+        # Create chat session
         self.chat_session = ChatSession(config_path)
         
-        # 创建主窗口
+        # Create main window
         self.root = tk.Tk()
         self.root.title(self.config['ui']['title'])
         self.root.geometry(f"{self.config['ui']['width']}x{self.config['ui']['height']}")
         
-        # 设置主题
+        # Set theme
         self.theme = self.config['ui']['theme']
         self.setup_theme()
         
-        # 创建UI组件
+        # Create UI components
         self.create_widgets()
         
-        # 加载状态
+        # Loading status
         self.is_model_loaded = False
         self.is_generating = False
     
     def setup_theme(self):
-        """设置UI主题"""
+        """Set UI theme"""
         if self.theme == "dark":
             self.bg_color = "#2d2d2d"
             self.fg_color = "#ffffff"
@@ -56,20 +56,20 @@ class ChatbotUI:
         self.root.configure(bg=self.bg_color)
     
     def create_widgets(self):
-        """创建UI组件"""
-        # 创建主框架
+        """Create UI components"""
+        # Create main frame
         main_frame = tk.Frame(self.root, bg=self.bg_color)
         main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # 聊天历史显示区域
+        # Chat history display area
         history_frame = tk.Frame(main_frame, bg=self.bg_color)
         history_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
         
-        # 聊天历史标签
-        history_label = tk.Label(history_frame, text="聊天历史", bg=self.bg_color, fg=self.fg_color)
+        # Chat history label
+        history_label = tk.Label(history_frame, text="Chat History", bg=self.bg_color, fg=self.fg_color)
         history_label.pack(anchor=tk.W, pady=(0, 5))
         
-        # 聊天历史文本区域
+        # Chat history text area
         self.chat_history_text = scrolledtext.ScrolledText(
             history_frame, 
             wrap=tk.WORD, 
@@ -78,17 +78,17 @@ class ChatbotUI:
             font=("TkDefaultFont", 10)
         )
         self.chat_history_text.pack(fill=tk.BOTH, expand=True)
-        self.chat_history_text.config(state=tk.DISABLED)  # 设为只读
+        self.chat_history_text.config(state=tk.DISABLED)  # Set to read-only
         
-        # 输入区域
+        # Input area
         input_frame = tk.Frame(main_frame, bg=self.bg_color)
         input_frame.pack(fill=tk.X, pady=(0, 10))
         
-        # 输入标签
-        input_label = tk.Label(input_frame, text="输入消息", bg=self.bg_color, fg=self.fg_color)
+        # Input label
+        input_label = tk.Label(input_frame, text="Enter Message", bg=self.bg_color, fg=self.fg_color)
         input_label.pack(anchor=tk.W, pady=(0, 5))
         
-        # 输入文本区域
+        # Input text area
         self.input_text = scrolledtext.ScrolledText(
             input_frame, 
             wrap=tk.WORD, 
@@ -96,68 +96,68 @@ class ChatbotUI:
             bg=self.input_bg, 
             fg=self.input_fg,
             font=("TkDefaultFont", 10),
-            insertbackground=self.input_fg,  # 设置光标颜色，使其可见
-            insertwidth=2  # 增加光标宽度
+            insertbackground=self.input_fg,  # Set cursor color to make it visible
+            insertwidth=2  # Increase cursor width
         )
         self.input_text.pack(fill=tk.X)
         self.input_text.bind("<Return>", self.on_enter_key)
         
-        # 确保输入框获得焦点
+        # Ensure input box gets focus
         self.root.after(100, lambda: self.input_text.focus_set())
         
-        # 按钮区域
-        button_frame = tk.Frame(main_frame, bg=self.bg_color, height=40)  # 增加高度
-        button_frame.pack(fill=tk.X, pady=5)  # 添加垂直外边距
-        button_frame.pack_propagate(False)  # 防止框架被子组件压缩
+        # Button area
+        button_frame = tk.Frame(main_frame, bg=self.bg_color, height=40)  # Increase height
+        button_frame.pack(fill=tk.X, pady=5)  # Add vertical margin
+        button_frame.pack_propagate(False)  # Prevent frame from being compressed by child components
         
-        # 创建按钮样式
+        # Create button style
         button_style = {
             'bg': self.button_bg, 
             'fg': self.button_fg,
-            'padx': 15,         # 增加水平内边距
-            'pady': 5,          # 添加垂直内边距
-            'relief': tk.RAISED,  # 使用RAISED样式，有轻微的3D效果
-            'borderwidth': 1,   # 保留最小边框
-            'highlightthickness': 0,  # 移除高亮边框
-            'font': ('TkDefaultFont', 10),  # 确保字体大小合适
-            'width': 8  # 固定宽度，确保按钮完全显示
+            'padx': 15,         # Increase horizontal padding
+            'pady': 5,          # Add vertical padding
+            'relief': tk.RAISED,  # Use RAISED style for a slight 3D effect
+            'borderwidth': 1,   # Keep minimal border
+            'highlightthickness': 0,  # Remove highlight border
+            'font': ('TkDefaultFont', 10),  # Ensure appropriate font size
+            'width': 8  # Fixed width to ensure button is fully displayed
         }
         
-        # 发送按钮
+        # Send button
         self.send_button = tk.Button(
             button_frame, 
-            text="发送", 
+            text="Send", 
             command=self.send_message,
             **button_style
         )
-        self.send_button.pack(side=tk.RIGHT, padx=(5, 0), pady=5)  # 添加外边距
+        self.send_button.pack(side=tk.RIGHT, padx=(5, 0), pady=5)  # Add margin
         
-        # 清除按钮
+        # Clear button
         clear_button_style = button_style.copy()
-        clear_button_style['width'] = 10  # 增加宽度以适应"清除历史"文本
+        clear_button_style['width'] = 10  # Increase width to fit "Clear History" text
         self.clear_button = tk.Button(
             button_frame, 
-            text="清除历史", 
+            text="Clear History", 
             command=self.clear_history,
             **clear_button_style
         )
-        self.clear_button.pack(side=tk.RIGHT, padx=(5, 0), pady=5)  # 添加外边距
+        self.clear_button.pack(side=tk.RIGHT, padx=(5, 0), pady=5)  # Add margin
         
-        # 加载模型按钮
+        # Load model button
         load_button_style = button_style.copy()
-        load_button_style['width'] = 10  # 增加宽度以适应"加载模型"文本
+        load_button_style['width'] = 10  # Increase width to fit "Load Model" text
         self.load_button = tk.Button(
             button_frame, 
-            text="加载模型", 
+            text="Load Model", 
             command=self.load_model,
             **load_button_style
         )
-        self.load_button.pack(side=tk.LEFT, padx=(0, 5), pady=5)  # 添加外边距
+        self.load_button.pack(side=tk.LEFT, padx=(0, 5), pady=5)  # Add margin
         
-        # 状态标签
+        # Status label
         self.status_label = tk.Label(
             main_frame, 
-            text="状态: 未加载模型", 
+            text="Status: Model not loaded", 
             bg=self.bg_color, 
             fg=self.fg_color,
             anchor=tk.W
@@ -165,150 +165,150 @@ class ChatbotUI:
         self.status_label.pack(fill=tk.X, pady=(5, 0))
     
     def load_model(self):
-        """加载模型"""
+        """Load model"""
         if self.is_model_loaded:
-            messagebox.showinfo("提示", "模型已经加载")
+            messagebox.showinfo("Notice", "Model already loaded")
             return
         
-        self.status_label.config(text="状态: 正在加载模型...")
+        self.status_label.config(text="Status: Loading model...")
         self.load_button.config(state=tk.DISABLED)
         
-        # 在新线程中加载模型
+        # Load model in a new thread
         threading.Thread(target=self._load_model_thread, daemon=True).start()
     
     def _load_model_thread(self):
-        """在新线程中加载模型"""
+        """Load model in a new thread"""
         success = self.chat_session.initialize()
         
-        # 更新UI（在主线程中）
+        # Update UI (in the main thread)
         self.root.after(0, self._update_ui_after_loading, success)
     
     def _update_ui_after_loading(self, success):
-        """模型加载后更新UI"""
+        """Update UI after model loading"""
         if success:
             self.is_model_loaded = True
-            self.status_label.config(text="状态: 模型已加载")
-            self.load_button.config(text="已加载", state=tk.DISABLED)
-            self.append_to_history("系统", "模型已加载完成，可以开始聊天了！")
+            self.status_label.config(text="Status: Model loaded")
+            self.load_button.config(text="Loaded", state=tk.DISABLED)
+            self.append_to_history("System", "Model loading complete, you can start chatting now!")
         else:
-            self.status_label.config(text="状态: 模型加载失败")
+            self.status_label.config(text="Status: Model loading failed")
             self.load_button.config(state=tk.NORMAL)
-            messagebox.showerror("错误", "模型加载失败，请检查配置和模型路径")
+            messagebox.showerror("Error", "Model loading failed, please check configuration and model path")
     
     def on_enter_key(self, event):
-        """处理回车键事件"""
-        # 如果按下Shift+Enter，则插入换行符
-        if event.state & 0x1:  # Shift键被按下
+        """Handle Enter key event"""
+        # If Shift+Enter is pressed, insert a newline
+        if event.state & 0x1:  # Shift key is pressed
             return
         
-        # 否则发送消息
+        # Otherwise send the message
         self.send_message()
-        return "break"  # 阻止默认的Enter键行为
+        return "break"  # Prevent default Enter key behavior
     
     def send_message(self):
-        """发送消息"""
+        """Send message"""
         if not self.is_model_loaded:
-            messagebox.showinfo("提示", "请先加载模型")
+            messagebox.showinfo("Notice", "Please load the model first")
             return
         
         if self.is_generating:
-            messagebox.showinfo("提示", "正在生成回复，请稍候")
+            messagebox.showinfo("Notice", "Generating response, please wait")
             return
         
-        # 获取用户输入
+        # Get user input
         user_input = self.input_text.get("1.0", tk.END).strip()
         if not user_input:
             return
         
-        # 清空输入框
+        # Clear input box
         self.input_text.delete("1.0", tk.END)
         
-        # 显示用户输入
-        self.append_to_history("用户", user_input)
+        # Display user input
+        self.append_to_history("User", user_input)
         
-        # 设置生成状态
+        # Set generation status
         self.is_generating = True
-        self.status_label.config(text="状态: 正在生成回复...")
+        self.status_label.config(text="Status: Generating response...")
         self.send_button.config(state=tk.DISABLED)
         
-        # 在新线程中生成回复
+        # Generate response in a new thread
         threading.Thread(target=self._generate_response_thread, args=(user_input,), daemon=True).start()
     
     def _generate_response_thread(self, user_input):
-        """在新线程中生成回复"""
+        """Generate response in a new thread"""
         try:
             response = self.chat_session.get_response(user_input)
             
-            # 更新UI（在主线程中）
+            # Update UI (in the main thread)
             self.root.after(0, self._update_ui_after_response, response)
         except Exception as e:
             self.root.after(0, self._update_ui_after_error, str(e))
     
     def _update_ui_after_response(self, response):
-        """回复生成后更新UI"""
-        # 显示助手回复
-        self.append_to_history("助手", response)
+        """Update UI after response generation"""
+        # Display assistant response
+        self.append_to_history("Assistant", response)
         
-        # 重置生成状态
+        # Reset generation status
         self.is_generating = False
-        self.status_label.config(text="状态: 已就绪")
+        self.status_label.config(text="Status: Ready")
         self.send_button.config(state=tk.NORMAL)
     
     def _update_ui_after_error(self, error_msg):
-        """发生错误后更新UI"""
-        messagebox.showerror("错误", f"生成回复时出错: {error_msg}")
+        """Update UI after an error occurs"""
+        messagebox.showerror("Error", f"Error generating response: {error_msg}")
         
-        # 重置生成状态
+        # Reset generation status
         self.is_generating = False
-        self.status_label.config(text="状态: 发生错误")
+        self.status_label.config(text="Status: Error occurred")
         self.send_button.config(state=tk.NORMAL)
     
     def append_to_history(self, role, message):
-        """将消息添加到聊天历史显示区域
+        """Add message to chat history display area
         
         Args:
-            role: 角色名称，如"用户"、"助手"
-            message: 消息内容
+            role: Role name, such as "User", "Assistant"
+            message: Message content
         """
-        self.chat_history_text.config(state=tk.NORMAL)  # 临时设为可编辑
+        self.chat_history_text.config(state=tk.NORMAL)  # Temporarily set to editable
         
-        # 添加分隔线（如果不是第一条消息）
+        # Add separator (if not the first message)
         if self.chat_history_text.get("1.0", tk.END).strip():
             self.chat_history_text.insert(tk.END, "\n\n")
         
-        # 添加角色名
-        if role == "用户":
+        # Add role name
+        if role == "User":
             self.chat_history_text.insert(tk.END, f"{role}: ", "user_tag")
             self.chat_history_text.tag_configure("user_tag", foreground="blue", font=("TkDefaultFont", 10, "bold"))
-        elif role == "助手":
+        elif role == "Assistant":
             self.chat_history_text.insert(tk.END, f"{role}: ", "assistant_tag")
             self.chat_history_text.tag_configure("assistant_tag", foreground="green", font=("TkDefaultFont", 10, "bold"))
         else:
             self.chat_history_text.insert(tk.END, f"{role}: ", "system_tag")
             self.chat_history_text.tag_configure("system_tag", foreground="gray", font=("TkDefaultFont", 10, "bold"))
         
-        # 添加消息内容
+        # Add message content
         self.chat_history_text.insert(tk.END, message)
         
-        # 滚动到底部
+        # Scroll to bottom
         self.chat_history_text.see(tk.END)
         
-        self.chat_history_text.config(state=tk.DISABLED)  # 恢复只读状态
+        self.chat_history_text.config(state=tk.DISABLED)  # Restore read-only state
     
     def clear_history(self):
-        """清除聊天历史"""
-        if messagebox.askyesno("确认", "确定要清除聊天历史吗？"):
-            # 清除显示
+        """Clear chat history"""
+        if messagebox.askyesno("Confirm", "Are you sure you want to clear the chat history?"):
+            # Clear display
             self.chat_history_text.config(state=tk.NORMAL)
             self.chat_history_text.delete("1.0", tk.END)
             self.chat_history_text.config(state=tk.DISABLED)
             
-            # 清除会话历史
+            # Clear session history
             self.chat_session.clear_history()
             
-            # 添加系统消息
-            self.append_to_history("系统", "聊天历史已清除")
+            # Add system message
+            self.append_to_history("System", "Chat history cleared")
     
     def run(self):
-        """运行应用程序"""
+        """Run the application"""
         self.root.mainloop()

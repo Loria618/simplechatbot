@@ -12,7 +12,7 @@ body {
 }
 
 .content {
-    max-width: 800px;
+    max-width: min(800px, 95%);
     margin: 50px auto;
     padding: 20px;
     background-color: white;
@@ -20,20 +20,20 @@ body {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* 聊天图标样式 */
+/* chat icon */
 .chat-icon {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    width: 60px;
-    height: 60px;
+    width: clamp(50px, 8vw, 60px);
+    height: clamp(50px, 8vw, 60px);
     background-color: #4a6cf7;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
-    font-size: 24px;
+    font-size: clamp(20px, 3vw, 24px);
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
@@ -45,13 +45,13 @@ body {
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
-/* 聊天容器样式 */
+/* chat container */
 .chat-container {
     position: fixed;
     bottom: 90px;
     right: 20px;
-    width: 350px;
-    height: 500px;
+    width: min(350px, 90vw);
+    height: min(500px, 80vh);
     background-color: white;
     border-radius: 12px;
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
@@ -62,7 +62,7 @@ body {
 }
 
 .chat-header {
-    padding: 15px;
+    padding: 12px 15px;
     background-color: #4a6cf7;
     color: white;
     display: flex;
@@ -80,18 +80,19 @@ body {
 
 .chat-body {
     flex: 1;
-    padding: 15px;
+    padding: 12px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .user-message, .bot-message, .system-message {
-    padding: 10px 15px;
-    border-radius: 18px;
-    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    max-width: 85%;
     word-wrap: break-word;
+    margin-bottom: 2px;
 }
 
 .user-message {
@@ -111,9 +112,9 @@ body {
     font-size: 0.9em;
 }
 
-/* 预设问题样式 */
+/* chat preset questions */
 .preset-questions {
-    padding: 10px 15px;
+    padding: 10px 12px;
     border-top: 1px solid #eee;
     background-color: #f9f9f9;
 }
@@ -126,13 +127,17 @@ body {
 
 .question-btn {
     display: inline-block;
-    margin: 3px;
-    padding: 6px 12px;
+    margin: 4px;
+    padding: 8px 12px;
     background-color: #e7eaf6;
     border-radius: 15px;
-    font-size: 12px;
+    font-size: clamp(11px, 0.8em, 12px);
     cursor: pointer;
     transition: background-color 0.2s;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .question-btn:hover {
@@ -140,16 +145,18 @@ body {
 }
 
 .chat-footer {
-    padding: 10px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
     border-top: 1px solid #eee;
+    gap: 8px;
 }
 
 .chat-footer textarea {
     flex: 1;
-    height: 40px;
-    padding: 8px 12px;
+    min-height: 40px;
+    max-height: 80px;
+    padding: 10px 14px;
     border: 1px solid #ddd;
     border-radius: 20px;
     resize: none;
@@ -159,9 +166,8 @@ body {
 }
 
 .chat-footer button {
-    width: 40px;
-    height: 40px;
-    margin-left: 8px;
+    min-width: 40px;
+    min-height: 40px;
     border: none;
     border-radius: 50%;
     background-color: #4a6cf7;

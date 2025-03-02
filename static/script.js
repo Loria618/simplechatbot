@@ -1,6 +1,6 @@
 // static/script.js
 document.addEventListener('DOMContentLoaded', function() {
-    // 获取DOM元素
+    // Get DOM elements
     const chatIcon = document.getElementById('chatIcon');
     const chatContainer = document.getElementById('chatContainer');
     const closeChat = document.getElementById('closeChat');
@@ -10,16 +10,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearChat = document.getElementById('clearChat');
     const presetQuestions = document.querySelectorAll('.question-btn');
     
-    // 生成唯一客户端ID
+    // Generate unique client ID
     const clientId = 'client_' + Math.random().toString(36).substr(2, 9);
     
-    // WebSocket连接
+    // WebSocket connection
     let socket;
     
-    // 连接状态
+    // Connection status
     let isConnected = false;
     
-    // 显示/隐藏聊天窗口
+    // Show/hide chat window
     chatIcon.addEventListener('click', function() {
         chatContainer.style.display = 'flex';
         chatIcon.style.display = 'none';
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatIcon.style.display = 'flex';
     });
     
-    // 建立WebSocket连接
+    // Establish WebSocket connection
     function connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws/${clientId}`;
@@ -42,13 +42,13 @@ document.addEventListener('DOMContentLoaded', function() {
         socket = new WebSocket(wsUrl);
         
         socket.onopen = function(e) {
-            console.log('WebSocket连接已建立');
+            console.log('WebSocket connection established');
             isConnected = true;
         };
         
         socket.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            console.log('收到消息:', data);
+            console.log('Message received:', data);
             
             if (data.type === 'chat') {
                 addBotMessage(data.content);
@@ -58,19 +58,19 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         
         socket.onclose = function(event) {
-            console.log('WebSocket连接已关闭', event);
+            console.log('WebSocket connection closed', event);
             isConnected = false;
-            addSystemMessage('连接已断开，请刷新页面重试');
+            addSystemMessage('Connection lost, please refresh the page to try again');
         };
         
         socket.onerror = function(error) {
-            console.error('WebSocket错误:', error);
+            console.error('WebSocket error:', error);
             isConnected = false;
-            addSystemMessage('连接出错，请刷新页面重试');
+            addSystemMessage('Connection error, please refresh the page to try again');
         };
     }
     
-    // 添加用户消息到聊天窗口
+    // Add user message to chat window
     function addUserMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.className = 'user-message';
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
     
-    // 添加机器人消息到聊天窗口
+    // Add bot message to chat window
     function addBotMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.className = 'bot-message';
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         chatBody.scrollTop = chatBody.scrollHeight;
     }
     
-    // 添加系统消息到聊天窗口
+    // Add system message to chat window
     function addSystemMessage(message) {
         const messageElement = document.createElement('div');
         messageElement.className = 'system-message';
@@ -100,22 +100,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const categorySelect = document.createElement('select');
     categorySelect.id = 'categorySelect';
     categorySelect.innerHTML = `
-        <option value="">所有知识</option>
-        <option value="编程">编程</option>
-        <option value="旅游">旅游</option>
+        <option value="">All</option>
+        <option value="Programming">Code</option>
+        <option value="Travel">Travel</option>
     `;
     
-    // 将分类选择添加到聊天页脚
+    // Add category selection to chat footer
     const chatFooter = document.querySelector('.chat-footer');
     chatFooter.insertBefore(categorySelect, userInput);
     
-    // 发送消息
+    // Send message
     function sendUserMessage() {
         const message = userInput.value.trim();
         if (message && isConnected) {
             addUserMessage(message);
             
-            // 获取当前选择的分类
+            // Get currently selected category
             const category = categorySelect.value;
             
             socket.send(JSON.stringify({
@@ -127,10 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 发送按钮点击事件
+    // Send button click event
     sendMessage.addEventListener('click', sendUserMessage);
     
-    // 输入框回车事件
+    // Input box Enter key event
     userInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -138,20 +138,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 清除聊天历史
+    // Clear chat history
     clearChat.addEventListener('click', function() {
         if (isConnected) {
             socket.send(JSON.stringify({
                 type: 'clear'
             }));
-            // 只保留系统消息
+            // Only keep system messages
             const systemMessages = chatBody.querySelectorAll('.system-message');
             chatBody.innerHTML = '';
             systemMessages.forEach(msg => chatBody.appendChild(msg));
         }
     });
     
-    // 预设问题点击事件
+    // Preset question click event
     presetQuestions.forEach(function(btn) {
         btn.addEventListener('click', function() {
             const question = this.getAttribute('data-question');
@@ -160,10 +160,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 添加知识库管理链接
+    // Add knowledge base management link
     const knowledgeLink = document.createElement('a');
     knowledgeLink.href = '/static/knowledge.html';
-    knowledgeLink.textContent = '知识库管理';
+    knowledgeLink.textContent = 'Knowledge Base Management';
     knowledgeLink.style.position = 'absolute';
     knowledgeLink.style.top = '10px';
     knowledgeLink.style.right = '10px';

@@ -1,42 +1,44 @@
-# chat_logic.py 更新版
+# chat_logic.py - Updated version
 import json
+import os
 from llm_handler import LLMHandler
+from env_utils import is_production, configure_for_environment
 
 class KnowledgeManager:
-    """管理知识库的类"""
+    """Class for managing the knowledge base"""
     
     def __init__(self, knowledge_path="knowledge.json"):
-        """初始化知识库管理器
+        """Initialize the knowledge base manager
         
         Args:
-            knowledge_path: 知识库文件路径
+            knowledge_path: Path to the knowledge base file
         """
         self.knowledge_path = knowledge_path
         self.knowledge = self._load_knowledge()
     
     def _load_knowledge(self):
-        """加载知识库"""
+        """Load the knowledge base"""
         try:
             with open(self.knowledge_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            # 如果文件不存在或格式错误，创建空知识库
+            # If the file doesn't exist or has incorrect format, create an empty knowledge base
             return {"general": [], "categories": {}}
     
     def save_knowledge(self):
-        """保存知识库"""
+        """Save the knowledge base"""
         with open(self.knowledge_path, 'w', encoding='utf-8') as f:
             json.dump(self.knowledge, f, ensure_ascii=False, indent=4)
     
     def add_knowledge(self, content, category=None):
-        """添加知识
+        """Add knowledge
         
         Args:
-            content: 知识内容
-            category: 知识分类，如果为None则添加到通用知识
+            content: Knowledge content
+            category: Knowledge category, if None it will be added to general knowledge
         
         Returns:
-            成功添加的知识ID
+            ID of the successfully added knowledge
         """
         if category:
             if category not in self.knowledge["categories"]:
@@ -52,82 +54,92 @@ class KnowledgeManager:
         return knowledge_id
     
     def get_knowledge(self, category=None):
-        """获取知识
+        """Get knowledge
         
         Args:
-            category: 知识分类，如果为None则获取所有知识
+            category: Knowledge category, if None it will get all knowledge
         
         Returns:
-            知识列表
+            List of knowledge items
         """
         if category and category in self.knowledge["categories"]:
             return self.knowledge["categories"][category]
         elif category:
             return []
         else:
-            # 返回所有知识
+            # Return all knowledge
             all_knowledge = self.knowledge["general"].copy()
             for category_knowledge in self.knowledge["categories"].values():
                 all_knowledge.extend(category_knowledge)
             return all_knowledge
     
     def format_for_prompt(self, category=None, max_items=5):
-        """将知识格式化为提示词
+        """Format knowledge for prompt
         
         Args:
-            category: 知识分类，如果为None则使用所有知识
-            max_items: 最大知识条目数
+            category: Knowledge category, if None it will use all knowledge
+            max_items: Maximum number of knowledge items
         
         Returns:
-            格式化后的知识文本
+            Formatted knowledge text
         """
         knowledge_items = self.get_knowledge(category)
         
-        # 如果知识太多，只取前max_items条
+        # If there's too much knowledge, only take the first max_items
         if len(knowledge_items) > max_items:
             knowledge_items = knowledge_items[:max_items]
         
         if not knowledge_items:
             return ""
         
-        formatted = "以下是你应该了解的重要信息：\n\n"
+        formatted = "Here is important information you should know:\n\n"
         for i, item in enumerate(knowledge_items, 1):
             formatted += f"{i}. {item}\n"
         
         return formatted
 
 class ChatSession:
-    """管理聊天会话的类"""
+    """Class for managing chat sessions"""
     
     def __init__(self, config_path="config.json", knowledge_path="knowledge.json"):
-        """初始化聊天会话
+        """Initialize chat session
         
         Args:
-            config_path: 配置文件路径
-            knowledge_path: 知识库文件路径
+            config_path: Path to configuration file
+            knowledge_path: Path to knowledge base file
         """
-        # 加载配置
+        # Get environment configuration
+        self.env_config = configure_for_environment()
+        
+        # Load configuration
         with open(config_path, 'r', encoding='utf-8') as f:
             self.config = json.load(f)
+            
+        # If in production environment, update configuration to use HuggingFace API
+        if is_production():
+            self.config['model']['use_huggingface_api'] = True
+            self.config['model']['use_ollama'] = False
+            self.config['model']['use_llama_cpp'] = False
+            print("Production environment detected, using HuggingFace API")
         
-        # 初始化LLM处理器
+        # Initialize LLM handler
         self.llm_handler = LLMHandler(config_path)
         
-        # 初始化知识库管理器
+        # Initialize knowledge base manager
         self.knowledge_manager = KnowledgeManager(knowledge_path)
         
-        # 聊天历史
+        # Chat history
         self.chat_history = []
         self.max_history = self.config['chat']['max_history']
         
-        # 添加系统提示词
+        # Add system prompt
         self.update_system_prompt()
     
     def update_system_prompt(self, category=None):
-        """更新系统提示词，包含知识库内容
+        """Update system prompt, including knowledge base content
         
         Args:
-            category: 知识分类，如果为None则使用所有知识
+            category: Knowledge category, if None it will use all knowledge
         """
         base_prompt = self.config['chat']['system_prompt']
         knowledge_text = self.knowledge_manager.format_for_prompt(category)
@@ -137,66 +149,66 @@ class ChatSession:
         else:
             system_prompt = base_prompt
         
-        # 更新聊天历史中的系统提示词
+        # Update system prompt in chat history
         if self.chat_history and self.chat_history[0]["role"] == "system":
             self.chat_history[0]["content"] = system_prompt
         else:
             self.chat_history.insert(0, {"role": "system", "content": system_prompt})
     
     def initialize(self):
-        """初始化聊天会话，加载模型"""
+        """Initialize chat session, load model"""
         return self.llm_handler.load_model()
     
     def add_message(self, role, content):
-        """添加消息到历史记录
+        """Add message to history
         
         Args:
-            role: 角色，'user'或'assistant'
-            content: 消息内容
+            role: Role, 'user' or 'assistant'
+            content: Message content
         """
         self.chat_history.append({"role": role, "content": content})
         
-        # 如果历史记录超过最大长度，删除最早的消息
-        # 但保留系统提示词
+        # If history exceeds maximum length, delete the oldest messages
+        # but keep the system prompt
         if len(self.chat_history) > self.max_history + 1:
-            # 如果第一条是系统提示词，保留它
+            # If the first message is a system prompt, keep it
             if self.chat_history[0]["role"] == "system":
                 self.chat_history = [self.chat_history[0]] + self.chat_history[-(self.max_history):]
             else:
                 self.chat_history = self.chat_history[-self.max_history:]
     
     def get_response(self, user_input, category=None):
-        """获取对用户输入的回复
+        """Get response to user input
         
         Args:
-            user_input: 用户输入的文本
-            category: 使用的知识分类，如果为None则使用所有知识
+            user_input: User input text
+            category: Knowledge category to use, if None it will use all knowledge
             
         Returns:
-            助手的回复文本
+            Assistant's response text
         """
-        # 如果指定了分类，更新系统提示词
+        # If a category is specified, update the system prompt
         if category:
             self.update_system_prompt(category)
         
-        # 添加用户消息到历史
+        # Add user message to history
         self.add_message("user", user_input)
         
-        # 获取回复
+        # Get response
         response = self.llm_handler.generate_response(self.chat_history)
         
-        # 添加助手回复到历史
+        # Add assistant response to history
         self.add_message("assistant", response)
         
         return response
     
     def clear_history(self):
-        """清除聊天历史"""
-        # 保留系统提示词
+        """Clear chat history"""
+        # Keep system prompt
         if self.chat_history and self.chat_history[0]["role"] == "system":
             system_prompt = self.chat_history[0]["content"]
             self.chat_history = [{"role": "system", "content": system_prompt}]
         else:
             self.chat_history = []
-            # 重新添加系统提示词
+            # Re-add system prompt
             self.update_system_prompt()

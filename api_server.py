@@ -1,100 +1,136 @@
-# api_server.py 更新版
+# api_server.py - Updated version
 from fastapi import FastAPI, WebSocket, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 import json
 import asyncio
 import uuid
+import os
 from chat_logic import ChatSession
+from env_utils import configure_for_environment, is_production, get_port
 
-app = FastAPI()
+# Get environment configuration
+env_config = configure_for_environment()
 
-# 挂载静态文件目录
+# Create FastAPI application
+app = FastAPI(
+    title="Simple Chatbot API",
+    description="A simple chatbot API that can be deployed locally or on Render",
+    version="1.0.0"
+)
+
+# Add CORS middleware to allow cross-origin requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
+
+# Mount static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 存储活跃的聊天会话
+# Store active chat sessions
 chat_sessions = {}
 
-# 主页路由
+# Homepage route
 @app.get("/", response_class=HTMLResponse)
 async def get_homepage():
     with open("static/index.html") as f:
         return f.read()
 
-# 知识库API模型
+# Knowledge API model
 class KnowledgeItem(BaseModel):
     content: str
     category: str = None
 
-# 获取所有知识
+# Get all knowledge
 @app.get("/api/knowledge")
 async def get_knowledge(category: str = None):
-    # 创建临时会话来访问知识库
+    # Create temporary session to access knowledge base
     temp_session = ChatSession()
     knowledge = temp_session.knowledge_manager.get_knowledge(category)
     
     return {"status": "success", "data": knowledge}
 
-# 添加新知识
+# Add new knowledge
 @app.post("/api/knowledge")
 async def add_knowledge(item: KnowledgeItem):
-    # 创建临时会话来访问知识库
+    # Create temporary session to access knowledge base
     temp_session = ChatSession()
     knowledge_id = temp_session.knowledge_manager.add_knowledge(item.content, item.category)
     
-    # 更新所有活跃会话的系统提示词
+    # Update system prompts for all active sessions
     for session in chat_sessions.values():
         session.update_system_prompt()
     
     return {"status": "success", "data": {"id": knowledge_id}}
 
-# WebSocket连接处理
+# WebSocket connection handler
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()
     
-    # 为新客户端创建聊天会话
+    # Create chat session for new client
     if client_id not in chat_sessions:
         chat_sessions[client_id] = ChatSession()
-        # 初始化模型
+        # Initialize model
         load_status = chat_sessions[client_id].initialize()
         await websocket.send_json({
             "type": "status",
-            "content": "模型已加载完成，可以开始聊天了！" if load_status else "模型加载失败！"
+            "content": "Model loaded successfully, ready to chat!" if load_status else "Model loading failed!"
         })
     
     try:
         while True:
-            # 接收消息
+            # Receive message
             data = await websocket.receive_text()
             message = json.loads(data)
             
             if message["type"] == "chat":
-                # 获取响应
+                # Get response
                 category = message.get("category", None)
                 response = chat_sessions[client_id].get_response(message["content"], category)
                 
-                # 发送响应
+                # Send response
                 await websocket.send_json({
                     "type": "chat",
                     "content": response
                 })
             elif message["type"] == "clear":
-                # 清除历史
+                # Clear history
                 chat_sessions[client_id].clear_history()
                 await websocket.send_json({
                     "type": "status",
-                    "content": "聊天历史已清除"
+                    "content": "Chat history cleared"
                 })
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
-        # 客户端断开时清理资源
+        # Clean up resources when client disconnects
         if client_id in chat_sessions:
-            # 保留聊天会话，直到会话超时
+            # Keep chat session until timeout
             pass
 
+# Health check endpoint for Render to confirm service is running properly
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "environment": "production" if is_production() else "local"}
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use port from environment configuration
+    port = get_port()
+    print(f"Starting server on port {port}")
+    print(f"Environment: {'Production' if is_production() else 'Local'}")
+    
+    # Output useful information if in production environment
+    if is_production():
+        print("Running in production mode with HuggingFace API")
+    else:
+        print("Running in local mode with local model")
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)

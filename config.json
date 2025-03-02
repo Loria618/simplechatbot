@@ -3,6 +3,8 @@
         "name": "llama3.2:1b",
         "use_ollama": true,
         "use_llama_cpp": false,
+        "use_huggingface_api": false,
+        "huggingface_model_name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
         "ollama_base_url": "http://localhost:11434",
         "local_model_path": "/Users/loria/.ollama/models/blobs/sha256-74701a8c35f6c8d9a4b91f3f3497643001d63e0c7a84e085bed452548fa88d45",
         "device": "auto",
@@ -11,8 +13,12 @@
         "n_gpu_layers": -1,
         "n_threads": 4
     },
+    "huggingface": {
+        "model_name": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+        "api_url_base": "https://api-inference.huggingface.co/models/"
+    },
     "ui": {
-        "title": "简单本地聊天机器人 (Ollama)",
+        "title": "Simple Chatbot",
         "width": 800,
         "height": 600,
         "theme": "light"
