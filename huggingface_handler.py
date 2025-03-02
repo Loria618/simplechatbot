@@ -35,7 +35,7 @@ class HuggingFaceHandler:
         else:
             # Fallback to model section
             self.model_name = self.config['model'].get('huggingface_model_name', 
-                             'meta-llama/Meta-Llama-3.1-8B-Instruct')
+                             'meta-llama/Llama-3.2-1B')
             self.max_new_tokens = self.config['chat']['max_new_tokens']
             self.temperature = 0.7
             self.top_p = 0.9
