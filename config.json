@@ -4,7 +4,7 @@
         "use_ollama": true,
         "use_llama_cpp": false,
         "use_huggingface_api": true,
-        "huggingface_model_name": "meta-llama/Meta-Llama-3.2-1B",
+        "huggingface_model_name": "meta-llama/Llama-3.2-1B",
         "ollama_base_url": "http://localhost:11434",
         "local_model_path": "/Users/loria/.ollama/models/blobs/sha256-74701a8c35f6c8d9a4b91f3f3497643001d63e0c7a84e085bed452548fa88d45",
         "device": "auto",
@@ -14,7 +14,7 @@
         "n_threads": 4
     },
     "huggingface": {
-        "model_name": "meta-llama/Meta-Llama-3.2-1B",
+        "model_name": "meta-llama/Llama-3.2-1B",
         "api_url_base": "https://api-inference.huggingface.co/models/"
     },
     "ui": {
