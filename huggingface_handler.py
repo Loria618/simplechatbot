@@ -86,32 +86,31 @@ class HuggingFaceHandler:
             "Content-Type": "application/json"
         }
         
-        # Format the conversation for the model
-        # Convert messages to a formatted string for text-generation models
-        formatted_prompt = ""
-        for msg in messages:
-            role = msg["role"]
-            content = msg["content"]
-            if role == "system":
-                formatted_prompt += f"<s>[INST] {content} [/INST]\n"
-            elif role == "user":
-                formatted_prompt += f"<s>[INST] {content} [/INST]\n"
-            elif role == "assistant":
-                formatted_prompt += f"{content}</s>\n"
+        # Get only the last few messages to avoid context overflow
+        # For Llama models, we'll use just the system prompt and the last user message
+        last_user_msg = None
+        for msg in reversed(messages):
+            if msg["role"] == "user":
+                last_user_msg = msg["content"]
+                break
         
-        # For the last user message, don't close the tag if it's the last message
-        if messages[-1]["role"] == "user":
-            formatted_prompt = formatted_prompt.rstrip("\n")
+        if not last_user_msg:
+            return "No user message found to respond to."
+        
+        # Create a simple prompt with just the system message and last user query
+        system_msg = messages[0]["content"]
+        prompt = f"<s>[INST] {system_msg} [/INST]</s>\n<s>[INST] {last_user_msg} [/INST]"
         
         # Construct request body for text-generation API
         payload = {
-            "inputs": formatted_prompt,
+            "inputs": prompt,
             "parameters": {
                 "max_new_tokens": self.max_new_tokens,
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 "repetition_penalty": self.repetition_penalty,
-                "do_sample": True
+                "do_sample": True,
+                "return_full_text": False
             }
         }
         
@@ -123,23 +122,33 @@ class HuggingFaceHandler:
             if response.status_code == 200:
                 result = response.json()
                 
-                # Handle different response formats
-                if isinstance(result, list) and len(result) > 0:
-                    if "generated_text" in result[0]:
-                        return result[0]["generated_text"]
-                    elif "content" in result[0]:
-                        return result[0]["content"]
+                # Extract the generated text from the response
+                if isinstance(result, str):
+                    # Some models return just the string
+                    return result
+                elif isinstance(result, list) and len(result) > 0:
+                    # Some models return a list with the first item containing the generated text
+                    if isinstance(result[0], str):
+                        return result[0]
+                    elif isinstance(result[0], dict):
+                        if "generated_text" in result[0]:
+                            # Extract just the generated text, not the prompt
+                            generated_text = result[0]["generated_text"]
+                            # Remove any prompt artifacts that might be included
+                            if "[/INST]" in generated_text:
+                                generated_text = generated_text.split("[/INST]", 1)[1].strip()
+                            return generated_text
                 elif isinstance(result, dict):
                     if "generated_text" in result:
-                        return result["generated_text"]
-                    elif "content" in result:
-                        return result["content"]
-                    # For Llama 3 models
-                    elif "message" in result and "content" in result["message"]:
-                        return result["message"]["content"]
+                        generated_text = result["generated_text"]
+                        # Remove any prompt artifacts that might be included
+                        if "[/INST]" in generated_text:
+                            generated_text = generated_text.split("[/INST]", 1)[1].strip()
+                        return generated_text
                 
-                # If parsing fails, return the original response
-                print(f"Unable to parse API response: {str(result)}")
+                # If we can't parse the result in any of the expected formats,
+                # return a generic message and log the full response
+                print(f"Unable to parse API response format: {str(result)}")
                 return "I'm having trouble generating a response right now. Please try again later."
             else:
                 error_msg = f"HuggingFace API returned an error: {response.status_code}, {response.text}"
